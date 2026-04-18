@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Controle Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface2: #222222;
+  --border: #2a2a2a;
+  --border2: #333333;
+  --text: #f0f0f0;
+  --muted: #888888;
+  --muted2: #555555;
+  --green: #4ade80;
+  --green-dim: #1a3d26;
+  --red: #f87171;
+  --red-dim: #3d1a1a;
+  --amber: #fbbf24;
+  --amber-dim: #3d3010;
+  --blue: #60a5fa;
+  --blue-dim: #1a2d3d;
+  --accent: #4ade80;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; font-size: 14px; overscroll-behavior: none; }
+body { display: flex; flex-direction: column; }
+
+#login-screen {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 1000; gap: 32px; padding: 32px;
+}
+.login-logo { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 4px; text-transform: uppercase; }
+.login-title { font-size: 28px; font-weight: 600; text-align: center; line-height: 1.2; }
+.login-title span { color: var(--accent); }
+.login-box { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+.login-box input {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
+  padding: 14px 16px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 15px; outline: none; width: 100%;
+}
+.login-box input:focus { border-color: var(--accent); }
+.login-btn {
+  background: var(--accent); color: #0f0f0f; border: none; border-radius: 10px;
+  padding: 14px; font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.login-btn:disabled { opacity: 0.5; }
+.login-error { color: var(--red); font-size: 12px; text-align: center; display: none; }
+.login-status { color: var(--muted); font-size: 12px; text-align: center; display: none; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  background: var(--bg); position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 3px; }
+.topbar-month { display: flex; align-items: center; gap: 10px; }
+.topbar-month span { font-size: 13px; font-weight: 500; min-width: 120px; text-align: center; }
+.arr-btn { background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--muted); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.arr-btn:active { background: var(--surface2); }
+.logout-btn { background: none; border: none; color: var(--muted2); cursor: pointer; font-size: 18px; padding: 4px; }
+
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; margin-left: 6px; }
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.bottom-nav {
+  display: flex; background: var(--surface); border-top: 1px solid var(--border);
+  position: sticky; bottom: 0; z-index: 100;
+}
+.bnav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 10px 4px; background: none; border: none; color: var(--muted);
+  cursor: pointer; font-family: 'Sora', sans-serif; font-size: 10px; letter-spacing: 0.5px;
+}
+.bnav-btn .ico { font-size: 18px; }
+.bnav-btn.active { color: var(--accent); }
+
+#app { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.pages { flex: 1; overflow-y: auto; }
+.page { display: none; padding: 14px 14px 20px; }
+.page.active { display: block; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.card-title { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.metric .lbl { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.metric .val { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500; }
+.metric .val.g { color: var(--green); }
+.metric .val.r { color: var(--red); }
+.metric .val.a { color: var(--amber); }
+.metric .sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+.bar-row { margin-bottom: 10px; }
+.bar-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.bar-meta .bcat { color: var(--muted); }
+.bar-meta .bval { font-family: 'DM Mono', monospace; }
+.bar-bg { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+.bar-fill { height: 6px; border-radius: 4px; transition: width 0.5s; }
+
+.item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.item-row:last-child { border-bottom: none; }
+.item-row .iname { font-size: 13px; font-weight: 500; }
+.item-row .imeta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.item-row .ival { font-family: 'DM Mono', monospace; font-size: 13px; }
+.item-row .ival.g { color: var(--green); }
+.item-row .ival.r { color: var(--red); }
+.del-btn { background: none; border: none; color: var(--muted2); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; }
+.del-btn:active { color: var(--red); }
+
+.insight { border-left: 2px solid; padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 8px; font-size: 12px; line-height: 1.6; }
+.insight.bad { border-color: var(--red); background: var(--red-dim); }
+.insight.warn { border-color: var(--amber); background: var(--amber-dim); }
+.insight.good { border-color: var(--green); background: var(--green-dim); }
+.insight.info { border-color: var(--blue); background: var(--blue-dim); }
+.insight-icon { font-size: 14px; margin-right: 6px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.f-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.f-group label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.f-group input, .f-group select {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+  padding: 10px 12px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px; outline: none;
+}
+.f-group input:focus, .f-group select:focus { border-color: var(--accent); }
+.f-group select option { background: var(--surface2); }
+.add-btn {
+  width: 100%; padding: 12px; background: var(--accent); color: #0f0f0f;
+  border: none; border-radius: 8px; font-family: 'Sora', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
+}
+.add-btn:active { opacity: 0.8; }
+.add-btn:disabled { opacity: 0.5; }
+
+.cmp-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.cmp-btn { width: 100%; padding: 11px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 12px; }
+.cmp-header { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+.cmp-header div { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.cmp-header div:last-child { text-align: right; }
+.cmp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; align-items: center; }
+.cmp-row:last-child { border-bottom: none; }
+.cmp-row .cmp-cat { color: var(--muted); }
+.cmp-row .cmp-val { font-family: 'DM Mono', monospace; font-size: 11px; }
+.cmp-row .cmp-diff { font-family: 'DM Mono', monospace; font-size: 11px; text-align: right; }
+.up { color: var(--red); }
+.dn { color: var(--green); }
+.empty { font-size: 12px; color: var(--muted); text-align: center; padding: 24px 0; }
+.loading { font-size: 12px; color: var(--muted); text-align: center; padding: 24px 0; animation: pulse 1s infinite; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-logo">● controle</div>
+  <div class="login-title">Controle<br><span>Financeiro</span></div>
+  <div class="login-box">
+    <input type="text" id="login-user" placeholder="Usuário" autocomplete="off" autocapitalize="none">
+    <input type="password" id="login-pass" placeholder="Senha">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-err">Usuário ou senha incorretos.</div>
+    <div class="login-status" id="login-status">Conectando...</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">○ FIN <span class="sync-dot" id="sync-dot" title="Sincronizado"></span></div>
+    <div class="topbar-month">
+      <button class="arr-btn" onclick="changeMonth(-1)">‹</button>
+      <span id="month-label">—</span>
+      <button class="arr-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">⏻</button>
+  </div>
+
+  <div class="pages">
+    <div class="page active" id="p-resumo">
+      <div class="metric-grid" id="metrics"><div class="loading" style="grid-column:1/-1">Carregando...</div></div>
+      <div class="card">
+        <div class="card-title">Gastos por categoria</div>
+        <div id="cat-bars"><div class="loading">Carregando...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Lançamentos recentes</div>
+        <div id="recent-items"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="p-lancamentos">
+      <div class="card">
+        <div class="card-title">Novo lançamento</div>
+        <div class="form-grid">
+          <div class="f-group" style="grid-column:1/-1"><label>Descrição</label><input id="f-desc" placeholder="Ex: Mercado, Salário..."></div>
+          <div class="f-group"><label>Valor (R$)</label><input id="f-valor" type="number" min="0" step="0.01" placeholder="0,00"></div>
+          <div class="f-group"><label>Dia</label><input id="f-dia" type="number" min="1" max="31" placeholder="1–31"></div>
+          <div class="f-group"><label>Categoria</label>
+            <select id="f-cat">
+              <option>Moradia</option><option>Alimentação</option><option>Transporte</option>
+              <option>Saúde</option><option>Lazer</option><option>Contas fixas</option>
+              <option>Investimento</option><option>Entrada</option><option>Outros</option>
+            </select>
+          </div>
+          <div class="f-group"><label>Tipo</label>
+            <select id="f-tipo">
+              <option value="saida">Saída</option>
+              <option value="entrada">Entrada</option>
+            </select>
+          </div>
+        </div>
+        <button class="add-btn" id="add-btn" onclick="addItem()">+ Adicionar</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Todos os lançamentos</div>
+        <div id="all-items"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="p-comparativo">
+      <div class="card">
+        <div class="card-title">Comparar dois meses</div>
+        <div class="cmp-select-grid">
+          <div class="f-group"><label>Mês A</label><select id="cmp-a"></select></div>
+          <div class="f-group"><label>Mês B</label><select id="cmp-b"></select></div>
+        </div>
+        <button class="cmp-btn" onclick="renderCmp()">Comparar →</button>
+        <div id="cmp-result"></div>
+      </div>
+    </div>
+
+    <div class="page" id="p-insights">
+      <div class="card">
+        <div class="card-title">Análise automática</div>
+        <div id="insights-list"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bnav-btn active" onclick="showPage('resumo',this)"><span class="ico">◈</span>Resumo</button>
+    <button class="bnav-btn" onclick="showPage('lancamentos',this)"><span class="ico">＋</span>Lançar</button>
+    <button class="bnav-btn" onclick="showPage('comparativo',this)"><span class="ico">◧</span>Comparar</button>
+    <button class="bnav-btn" onclick="showPage('insights',this)"><span class="ico">◎</span>Insights</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const SUPABASE_URL = 'COLOQUE_SUA_SUPABASE_URL_AQUI';
+const SUPABASE_ANON_KEY = 'COLOQUE_SUA_SUPABASE_ANON_KEY_AQUI';
+
+const USERS = { 'higoro': 'Porto123@' };
+
+// ── SUPABASE ──────────────────────────────────────────────────
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── CONSTANTS ─────────────────────────────────────────────────
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const CAT_COLORS = {
+  'Moradia':'#60a5fa','Alimentação':'#4ade80','Transporte':'#fbbf24',
+  'Saúde':'#f472b6','Lazer':'#a78bfa','Contas fixas':'#34d399',
+  'Investimento':'#38bdf8','Entrada':'#4ade80','Outros':'#94a3b8'
+};
+
+let data = {};
+let curMonth = new Date().getMonth();
+let curYear = new Date().getFullYear();
+let currentUser = null;
+
+function key(y, m) { return y + '-' + String(m).padStart(2,'0'); }
+function curKey() { return key(curYear, curMonth); }
+function fmt(v) { return 'R$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtShort(v) { if(Math.abs(v)>=1000) return 'R$' + (v/1000).toFixed(1) + 'k'; return 'R$' + Math.round(v); }
+
+// ── SYNC DOT ──────────────────────────────────────────────────
+function setSyncStatus(status) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : status === 'error' ? ' error' : '');
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const statusEl = document.getElementById('login-status');
+  const btn = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  if (!USERS[u] || USERS[u] !== p) {
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Conectando ao banco...';
+
+  try {
+    currentUser = u;
+    await loadFromSupabase();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    localStorage.setItem('cf_user', u);
+    render();
+  } catch(e) {
+    statusEl.textContent = 'Erro ao conectar. Usando dados locais.';
+    loadLocal();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    render();
+  }
+  btn.disabled = false;
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('cf_user');
+  data = {};
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ── SUPABASE OPS ──────────────────────────────────────────────
+async function loadFromSupabase() {
+  setSyncStatus('syncing');
+  const { data: rows, error } = await sb
+    .from('lancamentos')
+    .select('*')
+    .order('dia', { ascending: true });
+
+  if (error) throw error;
+
+  data = {};
+  (rows || []).forEach(row => {
+    const k = key(row.ano, row.mes);
+    if (!data[k]) data[k] = { items: [] };
+    data[k].items.push({
+      id: row.id,
+      desc: row.descricao,
+      valor: row.valor,
+      cat: row.cat,
+      tipo: row.tipo,
+      dia: row.dia
+    });
+  });
+
+  saveLocal();
+  setSyncStatus('ok');
+
+  if (!rows || rows.length === 0) {
+    await seedSupabase();
+  }
+}
+
+async function seedSupabase() {
+  const seedItems = [
+    {ano:2026,mes:2,descricao:'IR - Higor',valor:500,cat:'Entrada',tipo:'entrada',dia:1},
+    {ano:2026,mes:2,descricao:'Financiamento Moto (24/48)',valor:967,cat:'Transporte',tipo:'saida',dia:1},
+    {ano:2026,mes:2,descricao:'Água',valor:163.73,cat:'Contas fixas',tipo:'saida',dia:5},
+    {ano:2026,mes:2,descricao:'IPVA HB20',valor:382.11,cat:'Transporte',tipo:'saida',dia:7},
+    {ano:2026,mes:2,descricao:'Internet',valor:99.90,cat:'Contas fixas',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Celular',valor:99.60,cat:'Contas fixas',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Energia',valor:191.30,cat:'Contas fixas',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Financiamento Carro (14/48)',valor:961.57,cat:'Transporte',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Fatura Nubank',valor:9480,cat:'Outros',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Fatura Inter',valor:7121.48,cat:'Outros',tipo:'saida',dia:10},
+    {ano:2026,mes:2,descricao:'Salário IW',valor:2000,cat:'Entrada',tipo:'entrada',dia:15},
+    {ano:2026,mes:2,descricao:'Aluguel - Casa',valor:1400,cat:'Moradia',tipo:'saida',dia:20},
+    {ano:2026,mes:2,descricao:'Sem Parar',valor:59.82,cat:'Transporte',tipo:'saida',dia:20},
+    {ano:2026,mes:2,descricao:'IPVA FZ25',valor:94.74,cat:'Transporte',tipo:'saida',dia:21},
+    {ano:2026,mes:2,descricao:'Licenciamento FZ25',valor:174.08,cat:'Transporte',tipo:'saida',dia:21},
+    {ano:2026,mes:2,descricao:'Academia',valor:110,cat:'Saúde',tipo:'saida',dia:25},
+    {ano:2026,mes:2,descricao:'Vale IW',valor:2000,cat:'Entrada',tipo:'entrada',dia:30},
+  ];
+
+  const { error } = await sb.from('lancamentos').insert(seedItems);
+  if (!error) await loadFromSupabase();
+}
+
+async function saveToSupabase(item) {
+  setSyncStatus('syncing');
+  const { data: row, error } = await sb.from('lancamentos').insert({
+    ano: curYear, mes: curMonth,
+    descricao: item.desc, valor: item.valor,
+    cat: item.cat, tipo: item.tipo, dia: item.dia
+  }).select().single();
+
+  if (error) { setSyncStatus('error'); return null; }
+  setSyncStatus('ok');
+  return row.id;
+}
+
+async function deleteFromSupabase(id) {
+  setSyncStatus('syncing');
+  const { error } = await sb.from('lancamentos').delete().eq('id', id);
+  setSyncStatus(error ? 'error' : 'ok');
+}
+
+// ── LOCAL FALLBACK ────────────────────────────────────────────
+function saveLocal() { try { localStorage.setItem('cfin_v3', JSON.stringify(data)); } catch(e) {} }
+function loadLocal() { try { const d = localStorage.getItem('cfin_v3'); if(d) data = JSON.parse(d); } catch(e) {} }
+
+// ── TOTALS ────────────────────────────────────────────────────
+function totals(k) {
+  const items = (data[k]||{items:[]}).items;
+  let entrada=0, saida=0, invest=0;
+  const byCat = {};
+  items.forEach(i => {
+    if(i.tipo==='entrada') entrada += i.valor;
+    else { saida += i.valor; byCat[i.cat] = (byCat[i.cat]||0) + i.valor; }
+    if(i.cat==='Investimento') invest += i.valor;
+  });
+  return {entrada, saida, saldo:entrada-saida, invest, byCat};
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render() {
+  document.getElementById('month-label').textContent = MONTHS[curMonth] + ' ' + curYear;
+  const t = totals(curKey());
+  const saldoClass = t.saldo >= 0 ? 'g' : 'r';
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="lbl">Entradas</div><div class="val g">${fmt(t.entrada)}</div></div>
+    <div class="metric"><div class="lbl">Saídas</div><div class="val r">${fmt(t.saida)}</div></div>
+    <div class="metric"><div class="lbl">Saldo</div><div class="val ${saldoClass}">${fmt(t.saldo)}</div><div class="sub">${t.saldo>=0?'positivo':'negativo'}</div></div>
+    <div class="metric"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
+  `;
+
+  const sorted = Object.entries(t.byCat).sort((a,b)=>b[1]-a[1]);
+  const maxV = sorted[0] ? sorted[0][1] : 1;
+  document.getElementById('cat-bars').innerHTML = sorted.length
+    ? sorted.map(([c,v]) => `
+        <div class="bar-row">
+          <div class="bar-meta"><span class="bcat">${c}</span><span class="bval">${fmt(v)}</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/maxV*100)}%;background:${CAT_COLORS[c]||'#888'}"></div></div>
+        </div>`).join('')
+    : '<div class="empty">Sem gastos neste mês</div>';
+
+  const items = (data[curKey()]||{items:[]}).items;
+  document.getElementById('recent-items').innerHTML = items.length
+    ? [...items].reverse().slice(0,6).map(i => itemRowHTML(i)).join('')
+    : '<div class="empty">Sem lançamentos</div>';
+  document.getElementById('all-items').innerHTML = items.length
+    ? [...items].reverse().map(i => itemRowHTML(i, true)).join('')
+    : '<div class="empty">Sem lançamentos</div>';
+}
+
+function itemRowHTML(i, withDel=false) {
+  const iclass = i.tipo==='entrada' ? 'g' : 'r';
+  const sign = i.tipo==='entrada' ? '+' : '-';
+  const del = withDel ? `<button class="del-btn" onclick="removeItem('${i.id}')">×</button>` : '';
+  return `<div class="item-row">
+    <div>
+      <div class="iname">${i.desc}</div>
+      <div class="imeta">${i.cat} · dia ${i.dia}</div>
+    </div>
+    <div style="display:flex;align-items:center">
+      <span class="ival ${iclass}">${sign}${fmt(i.valor)}</span>${del}
+    </div>
+  </div>`;
+}
+
+async function addItem() {
+  const desc = document.getElementById('f-desc').value.trim();
+  const valor = parseFloat(document.getElementById('f-valor').value);
+  const dia = parseInt(document.getElementById('f-dia').value) || 1;
+  const cat = document.getElementById('f-cat').value;
+  const tipo = document.getElementById('f-tipo').value;
+  if (!desc || isNaN(valor) || valor <= 0) { alert('Preencha descrição e valor.'); return; }
+
+  const btn = document.getElementById('add-btn');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const tmpId = 'tmp_' + Date.now();
+  const k = curKey();
+  if (!data[k]) data[k] = {items:[]};
+  data[k].items.push({id: tmpId, desc, valor, cat, tipo, dia});
+  data[k].items.sort((a,b)=>a.dia-b.dia);
+  render();
+
+  const realId = await saveToSupabase({desc, valor, cat, tipo, dia});
+  if (realId) {
+    const item = data[k].items.find(i=>i.id===tmpId);
+    if (item) item.id = realId;
+  }
+  saveLocal();
+
+  document.getElementById('f-desc').value='';
+  document.getElementById('f-valor').value='';
+  document.getElementById('f-dia').value='';
+  btn.disabled = false;
+  btn.textContent = '+ Adicionar';
+}
+
+async function removeItem(id) {
+  if (!confirm('Remover este lançamento?')) return;
+  const k = curKey();
+  if(!data[k]) return;
+  data[k].items = data[k].items.filter(i=>i.id!==id);
+  saveLocal(); render();
+  await deleteFromSupabase(id);
+}
+
+function changeMonth(d) {
+  curMonth += d;
+  if(curMonth < 0) { curMonth = 11; curYear--; }
+  if(curMonth > 11) { curMonth = 0; curYear++; }
+  render();
+}
+
+// ── COMPARATIVO ───────────────────────────────────────────────
+function fillCmpSelects() {
+  const keys = Object.keys(data).sort();
+  ['cmp-a','cmp-b'].forEach((sid, idx) => {
+    const el = document.getElementById(sid);
+    el.innerHTML = keys.map((k,i) => {
+      const [y,m] = k.split('-');
+      return `<option value="${k}" ${i===keys.length-1-idx?'selected':''}>${MONTHS[+m]} ${y}</option>`;
+    }).join('');
+  });
+}
+
+function renderCmp() {
+  const ka = document.getElementById('cmp-a').value;
+  const kb = document.getElementById('cmp-b').value;
+  if(!ka||!kb||ka===kb) { document.getElementById('cmp-result').innerHTML='<div class="empty">Escolha meses diferentes.</div>'; return; }
+  const ta=totals(ka), tb=totals(kb);
+  const [ya,ma]=ka.split('-'), [yb,mb]=kb.split('-');
+  const la=MONTHS[+ma], lb=MONTHS[+mb];
+
+  const diffStr = (a,b,inv=false) => {
+    const d = b-a;
+    if(Math.abs(d)<0.01||!a) return '—';
+    const pct = Math.round(Math.abs(d)/Math.abs(a)*100);
+    const up = d>0;
+    const cls = inv ? (up?'dn':'up') : (up?'up':'dn');
+    return `<span class="${cls}">${up?'▲':'▼'}${pct}%</span>`;
+  };
+
+  const allCats = [...new Set([...Object.keys(ta.byCat),...Object.keys(tb.byCat)])];
+  const rows = [
+    ['Entradas', ta.entrada, tb.entrada, true],
+    ['Saídas', ta.saida, tb.saida, false],
+    ['Saldo', ta.saldo, tb.saldo, true],
+    ['Investido', ta.invest, tb.invest, true],
+    ...allCats.map(c=>[c, ta.byCat[c]||0, tb.byCat[c]||0, false])
+  ];
+
+  document.getElementById('cmp-result').innerHTML = `
+    <div class="cmp-header"><div>Categoria</div><div>${la}</div><div>${lb}</div></div>
+    ${rows.map(([c,a,b,inv])=>`
+      <div class="cmp-row">
+        <div class="cmp-cat">${c}</div>
+        <div class="cmp-val">${fmtShort(a)}</div>
+        <div class="cmp-diff">${fmtShort(b)} ${diffStr(a,b,inv)}</div>
+      </div>`).join('')}
+  `;
+}
+
+// ── INSIGHTS ──────────────────────────────────────────────────
+function renderInsights() {
+  const keys = Object.keys(data).sort();
+  const el = document.getElementById('insights-list');
+  const ins = [];
+  const icons = {bad:'⚠', warn:'◉', good:'✓', info:'◎'};
+
+  if(!keys.length) { el.innerHTML='<div class="empty">Adicione lançamentos para ver análises.</div>'; return; }
+
+  keys.forEach(k => {
+    const t = totals(k);
+    const [y,m] = k.split('-');
+    const label = MONTHS[+m]+' '+y;
+    const items = (data[k]||{items:[]}).items;
+    if(!items.length) return;
+
+    if(t.saldo < 0)
+      ins.push({type:'bad', msg:`<b>Saldo negativo em ${label}:</b> saídas (${fmt(t.saida)}) superaram entradas (${fmt(t.entrada)}) em ${fmt(Math.abs(t.saldo))}.`});
+    if(t.invest === 0)
+      ins.push({type:'warn', msg:`<b>Sem investimentos em ${label}.</b> Tente reservar pelo menos 10% da renda.`});
+    const pct = t.entrada > 0 ? t.invest/t.entrada*100 : 0;
+    if(pct > 0 && pct < 10)
+      ins.push({type:'warn', msg:`Em ${label} apenas ${pct.toFixed(1)}% da renda foi investida. Meta: 10%.`});
+    if(pct >= 10)
+      ins.push({type:'good', msg:`Ótimo! Em ${label} você investiu ${pct.toFixed(1)}% da renda.`});
+    const fatura = (t.byCat['Outros']||0);
+    if(fatura > t.entrada * 0.5)
+      ins.push({type:'bad', msg:`<b>Fatura alta em ${label}:</b> cartões consumiram ${fmt(fatura)} (${Math.round(fatura/t.entrada*100)}% da renda). Risco de endividamento.`});
+  });
+
+  if(keys.length >= 2) {
+    const last2 = keys.slice(-2);
+    const t0=totals(last2[0]), t1=totals(last2[1]);
+    const [y0,m0]=last2[0].split('-'), [y1,m1]=last2[1].split('-');
+    const l0=MONTHS[+m0], l1=MONTHS[+m1];
+    if(t1.saida > t0.saida * 1.2)
+      ins.push({type:'warn', msg:`Gastos em ${l1} foram <b>${Math.round((t1.saida/t0.saida-1)*100)}% maiores</b> que ${l0}. Verifique o que aumentou.`});
+    if(t1.saida < t0.saida * 0.85)
+      ins.push({type:'good', msg:`Parabéns! Gastos em ${l1} caíram ${Math.round((1-t1.saida/t0.saida)*100)}% em relação a ${l0}.`});
+    const allCats = [...new Set([...Object.keys(t0.byCat),...Object.keys(t1.byCat)])];
+    allCats.forEach(c => {
+      const v0=t0.byCat[c]||0, v1=t1.byCat[c]||0;
+      if(v0>0 && v1>v0*1.4)
+        ins.push({type:'warn', msg:`"${c}" subiu <b>${Math.round((v1/v0-1)*100)}%</b> de ${l0} para ${l1} (${fmt(v0)} → ${fmt(v1)}).`});
+    });
+  }
+
+  if(keys.length >= 3) {
+    const rk = keys.slice(-3);
+    if(rk.map(k=>totals(k).saldo).every(s=>s<0))
+      ins.push({type:'bad', msg:`<b>Saldo negativo por 3 meses seguidos.</b> Situação crítica — revise os gastos fixos urgentemente.`});
+  }
+
+  ins.push({type:'info', msg:`<b>Dica março/26:</b> transporte (financiamentos + IPVA) somou mais de R$ 2.600. Vale avaliar se ambos os veículos ainda cabem no orçamento.`});
+
+  if(!ins.length) ins.push({type:'good', msg:'Tudo equilibrado! Continue registrando para ver padrões ao longo do tempo.'});
+  el.innerHTML = ins.map(i=>`<div class="insight ${i.type}"><span class="insight-icon">${icons[i.type]}</span>${i.msg}</div>`).join('');
+}
+
+// ── NAV ───────────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='comparativo') fillCmpSelects();
+  if(name==='insights') renderInsights();
+  if(name==='resumo'||name==='lancamentos') render();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+const savedUser = localStorage.getItem('cf_user');
+if (savedUser && USERS[savedUser]) {
+  currentUser = savedUser;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadLocal();
+  render();
+  loadFromSupabase().then(() => render()).catch(() => {});
+}
+</script>
+</body>
+</html>

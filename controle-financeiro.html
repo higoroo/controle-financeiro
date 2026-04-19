@@ -12,6 +12,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:14px;overscroll-behavior:none}
 body{display:flex;flex-direction:column}
+
+/* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:32px;padding:32px}
 .login-logo{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:4px;text-transform:uppercase}
 .login-title{font-size:28px;font-weight:600;text-align:center;line-height:1.2}
@@ -23,6 +25,8 @@ body{display:flex;flex-direction:column}
 .login-btn:disabled{opacity:.5}
 .login-error{color:var(--red);font-size:12px;text-align:center;display:none}
 .login-status{color:var(--muted);font-size:12px;text-align:center;display:none}
+
+/* TOPBAR */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100}
 .topbar-logo{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:3px}
 .topbar-month{display:flex;align-items:center;gap:10px}
@@ -34,54 +38,84 @@ body{display:flex;flex-direction:column}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
 .sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* NAV */
 .bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:100}
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 4px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Sora',sans-serif;font-size:10px;letter-spacing:.5px}
 .bnav-btn .ico{font-size:18px}
 .bnav-btn.active{color:var(--accent)}
+
+/* PAGES */
 #app{display:none;flex:1;flex-direction:column;overflow:hidden}
 .pages{flex:1;overflow-y:auto}
 .page{display:none;padding:14px 14px 20px}
 .page.active{display:block}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
 .card-title{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+
+/* METRICS */
 .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .metric{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
 .metric .lbl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .metric .val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500}
 .metric .val.g{color:var(--green)}.metric .val.r{color:var(--red)}.metric .val.a{color:var(--amber)}
 .metric .sub{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* BARS */
 .bar-row{margin-bottom:10px}
 .bar-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
 .bar-meta .bcat{color:var(--muted)}.bar-meta .bval{font-family:'DM Mono',monospace}
 .bar-bg{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden}
 .bar-fill{height:6px;border-radius:4px;transition:width .5s}
+
+/* ITEM ROWS */
 .item-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .item-row:last-child{border-bottom:none}
 .item-row .iname{font-size:13px;font-weight:500}
 .item-row .imeta{font-size:11px;color:var(--muted);margin-top:2px}
 .item-row .ival{font-family:'DM Mono',monospace;font-size:13px}
 .item-row .ival.g{color:var(--green)}.item-row .ival.r{color:var(--red)}.item-row .ival.a{color:var(--amber)}
-.del-btn{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:18px;padding:0 0 0 10px;line-height:1}
+.del-btn{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:18px;padding:0 0 0 8px;line-height:1}
 .del-btn:active{color:var(--red)}
-.bill-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .2s}
+
+/* CONTAS FIXAS */
+.bill-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .bill-row:last-child{border-bottom:none}
-.bill-row.paid{opacity:.5}
-.bill-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:11px;color:transparent}
+.bill-left{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer}
+.bill-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:11px}
 .bill-row.paid .bill-check{background:var(--green);border-color:var(--green);color:#0f0f0f}
 .bill-info{flex:1}
-.bill-name{font-size:13px;font-weight:500}
+.bill-name{font-size:13px;font-weight:500;transition:color .2s}
 .bill-row.paid .bill-name{text-decoration:line-through;color:var(--muted)}
 .bill-date{font-size:11px;color:var(--muted);margin-top:2px}
-.bill-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--red)}
+.bill-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--red);transition:color .2s}
 .bill-row.paid .bill-val{color:var(--green)}
+.bill-edit-btn{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:15px;padding:4px;flex-shrink:0}
+.bill-edit-btn:active{color:var(--accent)}
+
+/* EDIT MODAL */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal-box{background:var(--surface);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;border-top:1px solid var(--border2)}
+#modal-box h3{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)}
+.modal-actions{display:flex;gap:8px;margin-top:4px}
+.modal-save{flex:1;padding:12px;background:var(--accent);color:#0f0f0f;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.modal-cancel{padding:12px 16px;background:var(--surface2);color:var(--muted);border:1px solid var(--border2);border-radius:8px;font-family:'Sora',sans-serif;font-size:14px;cursor:pointer}
+.modal-del{padding:12px;background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);border-radius:8px;font-family:'Sora',sans-serif;font-size:14px;cursor:pointer}
+
+/* PROGRESS */
 .progress-wrap{margin-bottom:12px}
 .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
 .progress-bg{background:var(--surface2);border-radius:4px;height:8px;overflow:hidden}
 .progress-fill{height:8px;border-radius:4px;background:var(--green);transition:width .5s}
+
+/* INSIGHTS */
 .insight{border-left:2px solid;padding:10px 12px;border-radius:0 8px 8px 0;margin-bottom:8px;font-size:12px;line-height:1.6}
 .insight.bad{border-color:var(--red);background:var(--red-dim)}.insight.warn{border-color:var(--amber);background:var(--amber-dim)}
 .insight.good{border-color:var(--green);background:var(--green-dim)}.insight.info{border-color:var(--blue);background:var(--blue-dim)}
 .insight-icon{font-size:14px;margin-right:6px}
+
+/* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .f-group{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
 .f-group label{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
@@ -90,6 +124,10 @@ body{display:flex;flex-direction:column}
 .f-group select option{background:var(--surface2)}
 .add-btn{width:100%;padding:12px;background:var(--accent);color:#0f0f0f;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
 .add-btn:active{opacity:.8}.add-btn:disabled{opacity:.5}
+.sec-btn{width:100%;padding:10px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;cursor:pointer;margin-top:6px}
+.sec-btn:active{background:var(--surface2)}
+
+/* COMPARE */
 .cmp-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .cmp-btn{width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:12px}
 .cmp-header{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px}
@@ -100,6 +138,8 @@ body{display:flex;flex-direction:column}
 .cmp-row .cmp-cat{color:var(--muted)}.cmp-row .cmp-val{font-family:'DM Mono',monospace;font-size:11px}
 .cmp-row .cmp-diff{font-family:'DM Mono',monospace;font-size:11px;text-align:right}
 .up{color:var(--red)}.dn{color:var(--green)}
+
+/* CHART */
 .chart-wrap{position:relative;height:190px;margin:4px 0 6px}
 .empty{font-size:12px;color:var(--muted);text-align:center;padding:24px 0}
 .loading{font-size:12px;color:var(--muted);text-align:center;padding:24px 0;animation:pulse 1s infinite}
@@ -107,6 +147,7 @@ body{display:flex;flex-direction:column}
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-logo">● controle</div>
   <div class="login-title">Controle<br><span>Financeiro</span></div>
@@ -119,6 +160,31 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
+<!-- MODAL EDITAR CONTA FIXA -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <h3 id="modal-title">Editar conta fixa</h3>
+    <div class="f-group"><label>Descrição</label><input id="m-desc" placeholder="Nome da conta"></div>
+    <div class="form-grid">
+      <div class="f-group"><label>Valor (R$)</label><input id="m-valor" type="number" min="0" step="0.01"></div>
+      <div class="f-group"><label>Dia</label><input id="m-dia" type="number" min="1" max="31"></div>
+    </div>
+    <div class="f-group"><label>Categoria</label>
+      <select id="m-cat">
+        <option>Moradia</option><option>Alimentação</option><option>Transporte</option>
+        <option>Saúde</option><option>Lazer</option><option>Contas fixas</option>
+        <option>Salário</option><option>Investimento</option><option>Entrada</option><option>Outros</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-del" onclick="deleteFixa()" id="modal-del-btn">Excluir</button>
+      <button class="modal-save" onclick="saveFixa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">○ FIN <span class="sync-dot" id="sync-dot"></span></div>
@@ -132,6 +198,7 @@ body{display:flex;flex-direction:column}
 
   <div class="pages">
 
+    <!-- RESUMO -->
     <div class="page active" id="p-resumo">
       <div class="metric-grid" id="metrics"><div class="loading" style="grid-column:1/-1">Carregando...</div></div>
       <div class="card">
@@ -152,18 +219,21 @@ body{display:flex;flex-direction:column}
       </div>
     </div>
 
+    <!-- CONTAS FIXAS -->
     <div class="page" id="p-fixas">
       <div class="card">
         <div class="card-title">Contas fixas — <span id="fixas-month-label"></span></div>
         <div class="progress-wrap" id="bills-progress"></div>
         <div id="bills-list"><div class="loading">Carregando...</div></div>
+        <button class="sec-btn" onclick="openModalNew()" style="margin-top:12px">+ Nova conta fixa</button>
       </div>
       <div class="card">
-        <div class="card-title">Resumo</div>
+        <div class="card-title">Resumo do mês</div>
         <div id="bills-summary"></div>
       </div>
     </div>
 
+    <!-- LANÇAMENTOS -->
     <div class="page" id="p-lancamentos">
       <div class="card">
         <div class="card-title">Novo lançamento</div>
@@ -175,7 +245,7 @@ body{display:flex;flex-direction:column}
             <select id="f-cat">
               <option>Moradia</option><option>Alimentação</option><option>Transporte</option>
               <option>Saúde</option><option>Lazer</option><option>Contas fixas</option>
-              <option>Investimento</option><option>Entrada</option><option>Outros</option>
+              <option>Salário</option><option>Investimento</option><option>Entrada</option><option>Outros</option>
             </select>
           </div>
           <div class="f-group"><label>Tipo</label>
@@ -190,6 +260,7 @@ body{display:flex;flex-direction:column}
       </div>
     </div>
 
+    <!-- COMPARATIVO -->
     <div class="page" id="p-comparativo">
       <div class="card">
         <div class="card-title">Comparar dois meses</div>
@@ -202,6 +273,7 @@ body{display:flex;flex-direction:column}
       </div>
     </div>
 
+    <!-- INSIGHTS -->
     <div class="page" id="p-insights">
       <div class="card">
         <div class="card-title">Análise automática</div>
@@ -221,39 +293,36 @@ body{display:flex;flex-direction:column}
 </div>
 
 <script>
+// ── CONFIG ────────────────────────────────────────────────────
 const SUPABASE_URL='https://huagprlfwnmjrxfwkeak.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YWdwcmxmd25tanJ4ZndrZWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDA1NjcsImV4cCI6MjA5MjExNjU2N30.oqLCi5qSdBRPnHFye0sy8rlaKQ-KcWL8W6sauNYbCB4';
 const USERS={'higoro':'Porto123@'};
 
-const CONTAS_FIXAS=[
-  {id:'cf1',desc:'Financiamento Moto (24/48)',valor:967.00,dia:1,cat:'Transporte'},
-  {id:'cf2',desc:'Água',valor:163.73,dia:5,cat:'Contas fixas'},
-  {id:'cf3',desc:'Internet',valor:99.90,dia:10,cat:'Contas fixas'},
-  {id:'cf4',desc:'Celular',valor:99.60,dia:10,cat:'Contas fixas'},
-  {id:'cf5',desc:'Energia',valor:191.30,dia:10,cat:'Contas fixas'},
-  {id:'cf6',desc:'Financiamento Carro (14/48)',valor:961.57,dia:10,cat:'Transporte'},
-  {id:'cf7',desc:'Aluguel - Casa',valor:1400.00,dia:20,cat:'Moradia'},
-  {id:'cf8',desc:'Sem Parar',valor:59.82,dia:20,cat:'Transporte'},
-  {id:'cf9',desc:'Academia',valor:110.00,dia:25,cat:'Saúde'},
-];
-
 const {createClient}=supabase;
 const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
+// ── CONSTANTS ─────────────────────────────────────────────────
 const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const CAT_COLORS={'Moradia':'#60a5fa','Alimentação':'#4ade80','Transporte':'#fbbf24','Saúde':'#f472b6','Lazer':'#a78bfa','Contas fixas':'#34d399','Investimento':'#38bdf8','Entrada':'#4ade80','Outros':'#94a3b8'};
+const CAT_COLORS={'Moradia':'#60a5fa','Alimentação':'#4ade80','Transporte':'#fbbf24','Saúde':'#f472b6','Lazer':'#a78bfa','Contas fixas':'#34d399','Salário':'#38bdf8','Investimento':'#818cf8','Entrada':'#4ade80','Outros':'#94a3b8'};
 
-let data={},paid={};
-let curMonth=new Date().getMonth(),curYear=new Date().getFullYear();
-let currentUser=null,chartPizza=null,chartEvo=null;
+// ── STATE ─────────────────────────────────────────────────────
+let data={};      // lançamentos manuais: { 'YYYY-MM': {items:[]} }
+let paid={};      // contas fixas pagas: { 'YYYY-MM': { cfId: true } }
+let fixas=[];     // contas fixas templates (editáveis, salvas no supabase)
+let curMonth=new Date().getMonth(), curYear=new Date().getFullYear();
+let currentUser=null, chartPizza=null, chartEvo=null;
+let editingFixaId=null; // id da fixa sendo editada no modal
 
 function key(y,m){return y+'-'+String(m).padStart(2,'0')}
 function curKey(){return key(curYear,curMonth)}
 function fmt(v){return 'R$ '+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fmtS(v){return Math.abs(v)>=1000?'R$'+(v/1000).toFixed(1)+'k':'R$'+Math.round(v)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
+// ── SYNC DOT ──────────────────────────────────────────────────
 function setSyncStatus(s){const d=document.getElementById('sync-dot');d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'')}
 
+// ── AUTH ──────────────────────────────────────────────────────
 async function doLogin(){
   const u=document.getElementById('login-user').value.trim().toLowerCase();
   const p=document.getElementById('login-pass').value;
@@ -273,57 +342,79 @@ function openApp(){
   localStorage.setItem('cf_user',currentUser);
   render();
 }
-
 function doLogout(){
-  currentUser=null;localStorage.removeItem('cf_user');data={};paid={};
+  currentUser=null;localStorage.removeItem('cf_user');data={};paid={};fixas=[];
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
-  document.getElementById('login-user').value='';
-  document.getElementById('login-pass').value='';
+  document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
 }
 
+// ── SUPABASE ──────────────────────────────────────────────────
 async function loadFromSupabase(){
   setSyncStatus('syncing');
-  const [lr,pr]=await Promise.all([
+  const [lr,pr,fr]=await Promise.all([
     sb.from('lancamentos').select('*').order('dia',{ascending:true}),
-    sb.from('contas_pagas').select('*')
+    sb.from('contas_pagas').select('*'),
+    sb.from('contas_fixas_templates').select('*').order('dia',{ascending:true})
   ]);
   if(lr.error)throw lr.error;
+
+  // lançamentos
   data={};
   (lr.data||[]).forEach(r=>{
     const k=key(r.ano,r.mes);
     if(!data[k])data[k]={items:[]};
     data[k].items.push({id:r.id,desc:r.descricao,valor:r.valor,cat:r.cat,tipo:r.tipo,dia:r.dia});
   });
+
+  // pagas
   paid={};
   (pr.data||[]).forEach(r=>{
-    const k=key(r.ano,r.mes);
-    if(!paid[k])paid[k]={};
-    paid[k][r.conta_id]=true;
+    const k=key(r.ano,r.mes);if(!paid[k])paid[k]={};paid[k][r.conta_id]=true;
   });
+
+  // fixas templates
+  if(fr.data&&fr.data.length){
+    fixas=fr.data.map(r=>({id:r.id,desc:r.descricao,valor:r.valor,dia:r.dia,cat:r.cat}));
+  } else {
+    // seed padrão
+    fixas=getDefaultFixas();
+    await seedFixas();
+  }
+
   saveLocal();setSyncStatus('ok');
-  if(!lr.data||!lr.data.length)await seedSupabase();
+  if(!lr.data||!lr.data.length)await seedLancamentos();
 }
 
-async function seedSupabase(){
+function getDefaultFixas(){
+  return [
+    {id:uid(),desc:'Financiamento Moto (24/48)',valor:967.00,dia:1,cat:'Transporte'},
+    {id:uid(),desc:'Água',valor:163.73,dia:5,cat:'Contas fixas'},
+    {id:uid(),desc:'Internet',valor:99.90,dia:10,cat:'Contas fixas'},
+    {id:uid(),desc:'Celular',valor:99.60,dia:10,cat:'Contas fixas'},
+    {id:uid(),desc:'Energia',valor:191.30,dia:10,cat:'Contas fixas'},
+    {id:uid(),desc:'Financiamento Carro (14/48)',valor:961.57,dia:10,cat:'Transporte'},
+    {id:uid(),desc:'Aluguel - Casa',valor:1400.00,dia:20,cat:'Moradia'},
+    {id:uid(),desc:'Sem Parar',valor:59.82,dia:20,cat:'Transporte'},
+    {id:uid(),desc:'Academia',valor:110.00,dia:25,cat:'Saúde'},
+  ];
+}
+
+async function seedFixas(){
+  const rows=fixas.map(f=>({id:f.id,descricao:f.desc,valor:f.valor,dia:f.dia,cat:f.cat}));
+  await sb.from('contas_fixas_templates').insert(rows);
+}
+
+async function seedLancamentos(){
   const items=[
-    {ano:2026,mes:2,descricao:'IR - Higor',valor:500,cat:'Entrada',tipo:'entrada',dia:1},
-    {ano:2026,mes:2,descricao:'Financiamento Moto (24/48)',valor:967,cat:'Transporte',tipo:'saida',dia:1},
-    {ano:2026,mes:2,descricao:'Água',valor:163.73,cat:'Contas fixas',tipo:'saida',dia:5},
+    {ano:2026,mes:2,descricao:'IR - Higor',valor:500,cat:'Salário',tipo:'entrada',dia:1},
+    {ano:2026,mes:2,descricao:'Salário IW',valor:2000,cat:'Salário',tipo:'entrada',dia:15},
+    {ano:2026,mes:2,descricao:'Vale IW',valor:2000,cat:'Salário',tipo:'entrada',dia:30},
     {ano:2026,mes:2,descricao:'IPVA HB20',valor:382.11,cat:'Transporte',tipo:'saida',dia:7},
-    {ano:2026,mes:2,descricao:'Internet',valor:99.90,cat:'Contas fixas',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'Celular',valor:99.60,cat:'Contas fixas',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'Energia',valor:191.30,cat:'Contas fixas',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'Financiamento Carro (14/48)',valor:961.57,cat:'Transporte',tipo:'saida',dia:10},
     {ano:2026,mes:2,descricao:'Fatura Nubank',valor:9480,cat:'Outros',tipo:'saida',dia:10},
     {ano:2026,mes:2,descricao:'Fatura Inter',valor:7121.48,cat:'Outros',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'Salário IW',valor:2000,cat:'Entrada',tipo:'entrada',dia:15},
-    {ano:2026,mes:2,descricao:'Aluguel - Casa',valor:1400,cat:'Moradia',tipo:'saida',dia:20},
-    {ano:2026,mes:2,descricao:'Sem Parar',valor:59.82,cat:'Transporte',tipo:'saida',dia:20},
     {ano:2026,mes:2,descricao:'IPVA FZ25',valor:94.74,cat:'Transporte',tipo:'saida',dia:21},
     {ano:2026,mes:2,descricao:'Licenciamento FZ25',valor:174.08,cat:'Transporte',tipo:'saida',dia:21},
-    {ano:2026,mes:2,descricao:'Academia',valor:110,cat:'Saúde',tipo:'saida',dia:25},
-    {ano:2026,mes:2,descricao:'Vale IW',valor:2000,cat:'Entrada',tipo:'entrada',dia:30},
   ];
   const {error}=await sb.from('lancamentos').insert(items);
   if(!error)await loadFromSupabase();
@@ -332,55 +423,99 @@ async function seedSupabase(){
 async function saveToSupabase(item){
   setSyncStatus('syncing');
   const {data:row,error}=await sb.from('lancamentos').insert({ano:curYear,mes:curMonth,descricao:item.desc,valor:item.valor,cat:item.cat,tipo:item.tipo,dia:item.dia}).select().single();
-  setSyncStatus(error?'error':'ok');
-  return error?null:row.id;
+  setSyncStatus(error?'error':'ok');return error?null:row.id;
 }
-async function deleteFromSupabase(id){setSyncStatus('syncing');const {error}=await sb.from('lancamentos').delete().eq('id',id);setSyncStatus(error?'error':'ok')}
+async function deleteFromSupabase(id){setSyncStatus('syncing');const{error}=await sb.from('lancamentos').delete().eq('id',id);setSyncStatus(error?'error':'ok')}
+
 async function togglePaidRemote(cid,isPaid){
-  if(isPaid)await sb.from('contas_pagas').insert({ano:curYear,mes:curMonth,conta_id:cid});
+  if(isPaid) await sb.from('contas_pagas').insert({ano:curYear,mes:curMonth,conta_id:cid});
   else await sb.from('contas_pagas').delete().eq('ano',curYear).eq('mes',curMonth).eq('conta_id',cid);
 }
 
-function saveLocal(){try{localStorage.setItem('cfin_v4',JSON.stringify({data,paid}))}catch(e){}}
-function loadLocal(){try{const d=localStorage.getItem('cfin_v4');if(d){const p=JSON.parse(d);data=p.data||{};paid=p.paid||{}}}catch(e){}}
+async function saveFixaRemote(f,isNew){
+  if(isNew) await sb.from('contas_fixas_templates').insert({id:f.id,descricao:f.desc,valor:f.valor,dia:f.dia,cat:f.cat});
+  else await sb.from('contas_fixas_templates').update({descricao:f.desc,valor:f.valor,dia:f.dia,cat:f.cat}).eq('id',f.id);
+}
+async function deleteFixaRemote(id){
+  await sb.from('contas_fixas_templates').delete().eq('id',id);
+  // também remove todos os pagamentos relacionados
+  await sb.from('contas_pagas').delete().eq('conta_id',id);
+}
 
+// ── LOCAL STORAGE ─────────────────────────────────────────────
+function saveLocal(){try{localStorage.setItem('cfin_v5',JSON.stringify({data,paid,fixas}))}catch(e){}}
+function loadLocal(){try{const d=localStorage.getItem('cfin_v5');if(d){const p=JSON.parse(d);data=p.data||{};paid=p.paid||{};fixas=p.fixas||getDefaultFixas()}}catch(e){fixas=getDefaultFixas()}}
+
+// ── TOTALS ────────────────────────────────────────────────────
+// Combina lançamentos manuais + contas fixas pagas do mês
 function totals(k){
   const items=(data[k]||{items:[]}).items;
-  let entrada=0,saida=0,invest=0;const byCat={};
+  const [yr,mo]=k.split('-');
+  const pm=paid[k]||{};
+
+  let entrada=0,saida=0,invest=0;
+  const byCat={};
+
+  // lançamentos manuais
   items.forEach(i=>{
-    if(i.tipo==='entrada')entrada+=i.valor;
+    if(i.tipo==='entrada') entrada+=i.valor;
     else{saida+=i.valor;byCat[i.cat]=(byCat[i.cat]||0)+i.valor}
-    if(i.cat==='Investimento')invest+=i.valor;
+    if(i.cat==='Investimento') invest+=i.valor;
   });
+
+  // contas fixas pagas: somam como saída
+  fixas.forEach(f=>{
+    if(pm[f.id]){
+      saida+=f.valor;
+      byCat[f.cat]=(byCat[f.cat]||0)+f.valor;
+    }
+  });
+
   return{entrada,saida,saldo:entrada-saida,invest,byCat};
 }
 
+// ── RENDER RESUMO ─────────────────────────────────────────────
 function render(){
   document.getElementById('month-label').textContent=MONTHS[curMonth]+' '+curYear;
   const t=totals(curKey());
   const sc=t.saldo>=0?'g':'r';
+
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="lbl">Entradas</div><div class="val g">${fmt(t.entrada)}</div></div>
     <div class="metric"><div class="lbl">Saídas</div><div class="val r">${fmt(t.saida)}</div></div>
     <div class="metric"><div class="lbl">Saldo</div><div class="val ${sc}">${fmt(t.saldo)}</div><div class="sub">${t.saldo>=0?'positivo':'negativo'}</div></div>
     <div class="metric"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
   `;
+
   const sorted=Object.entries(t.byCat).sort((a,b)=>b[1]-a[1]);
   const maxV=sorted[0]?sorted[0][1]:1;
   document.getElementById('cat-bars').innerHTML=sorted.length
     ?sorted.map(([c,v])=>`<div class="bar-row"><div class="bar-meta"><span class="bcat">${c}</span><span class="bval">${fmt(v)}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/maxV*100)}%;background:${CAT_COLORS[c]||'#888'}"></div></div></div>`).join('')
     :'<div class="empty">Sem gastos neste mês</div>';
+
   renderChartPizza(t.byCat);
   renderChartEvo();
-  const items=(data[curKey()]||{items:[]}).items;
-  document.getElementById('recent-items').innerHTML=items.length
-    ?[...items].reverse().slice(0,6).map(i=>rowHTML(i)).join('')
+
+  // lançamentos recentes (manuais + fixas pagas)
+  const allItems=buildAllItems();
+  document.getElementById('recent-items').innerHTML=allItems.length
+    ?allItems.slice(0,6).map(i=>rowHTML(i)).join('')
     :'<div class="empty">Sem lançamentos</div>';
-  document.getElementById('all-items').innerHTML=items.length
-    ?[...items].reverse().map(i=>rowHTML(i,true)).join('')
+  document.getElementById('all-items').innerHTML=allItems.length
+    ?allItems.map(i=>rowHTML(i,i._manual)).join('')
     :'<div class="empty">Sem lançamentos</div>';
 }
 
+// Monta lista combinada: manuais + fixas pagas, ordenada por dia desc
+function buildAllItems(){
+  const k=curKey();
+  const pm=paid[k]||{};
+  const manual=(data[k]||{items:[]}).items.map(i=>({...i,_manual:true}));
+  const fixPaid=fixas.filter(f=>pm[f.id]).map(f=>({id:f.id,desc:f.desc,valor:f.valor,cat:f.cat,tipo:'saida',dia:f.dia,_manual:false,_fixa:true}));
+  return [...manual,...fixPaid].sort((a,b)=>b.dia-a.dia);
+}
+
+// ── CHARTS ────────────────────────────────────────────────────
 function renderChartPizza(byCat){
   const cats=Object.keys(byCat).filter(c=>byCat[c]>0);
   if(!cats.length)return;
@@ -393,7 +528,6 @@ function renderChartPizza(byCat){
         tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}}}
   });
 }
-
 function renderChartEvo(){
   const keys=Object.keys(data).sort().slice(-6);
   if(keys.length<2)return;
@@ -412,29 +546,39 @@ function renderChartEvo(){
   });
 }
 
+// ── CONTAS FIXAS ──────────────────────────────────────────────
 function renderFixas(){
   const k=curKey();
   document.getElementById('fixas-month-label').textContent=MONTHS[curMonth]+' '+curYear;
   const pm=paid[k]||{};
-  const paidCount=CONTAS_FIXAS.filter(c=>pm[c.id]).length;
-  const total=CONTAS_FIXAS.reduce((s,c)=>s+c.valor,0);
-  const paidTotal=CONTAS_FIXAS.filter(c=>pm[c.id]).reduce((s,c)=>s+c.valor,0);
-  const pct=Math.round(paidCount/CONTAS_FIXAS.length*100);
+  const paidCount=fixas.filter(f=>pm[f.id]).length;
+  const total=fixas.reduce((s,f)=>s+f.valor,0);
+  const paidTotal=fixas.filter(f=>pm[f.id]).reduce((s,f)=>s+f.valor,0);
+  const pct=fixas.length?Math.round(paidCount/fixas.length*100):0;
+
   document.getElementById('bills-progress').innerHTML=`
-    <div class="progress-label"><span>${paidCount} de ${CONTAS_FIXAS.length} pagas</span><span>${pct}%</span></div>
+    <div class="progress-label"><span>${paidCount} de ${fixas.length} pagas</span><span>${pct}%</span></div>
     <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
   `;
-  document.getElementById('bills-list').innerHTML=[...CONTAS_FIXAS].sort((a,b)=>a.dia-b.dia).map(c=>{
-    const isPaid=!!pm[c.id];
-    return`<div class="bill-row${isPaid?' paid':''}" onclick="togglePaid('${c.id}')">
-      <div class="bill-check">${isPaid?'✓':''}</div>
-      <div class="bill-info"><div class="bill-name">${c.desc}</div><div class="bill-date">dia ${c.dia} · ${c.cat}</div></div>
-      <div class="bill-val">${fmt(c.valor)}</div>
+
+  document.getElementById('bills-list').innerHTML=[...fixas].sort((a,b)=>a.dia-b.dia).map(f=>{
+    const isPaid=!!pm[f.id];
+    return`<div class="bill-row${isPaid?' paid':''}" id="bill-${f.id}">
+      <div class="bill-left" onclick="togglePaid('${f.id}')">
+        <div class="bill-check">${isPaid?'✓':''}</div>
+        <div class="bill-info">
+          <div class="bill-name">${f.desc}</div>
+          <div class="bill-date">dia ${f.dia} · ${f.cat}</div>
+        </div>
+      </div>
+      <div class="bill-val">${fmt(f.valor)}</div>
+      <button class="bill-edit-btn" onclick="openModalEdit('${f.id}')" title="Editar">✎</button>
     </div>`;
   }).join('');
+
   document.getElementById('bills-summary').innerHTML=`
     <div class="item-row"><span class="imeta">Total fixos/mês</span><span class="ival r">${fmt(total)}</span></div>
-    <div class="item-row"><span class="imeta">Já pago</span><span class="ival g">${fmt(paidTotal)}</span></div>
+    <div class="item-row"><span class="imeta">Já pago (somado ao mês)</span><span class="ival g">${fmt(paidTotal)}</span></div>
     <div class="item-row"><span class="imeta">Ainda a pagar</span><span class="ival a">${fmt(total-paidTotal)}</span></div>
   `;
 }
@@ -445,15 +589,78 @@ async function togglePaid(cid){
   const isPaid=!paid[k][cid];
   paid[k][cid]=isPaid;
   if(!isPaid)delete paid[k][cid];
-  saveLocal();renderFixas();
+  saveLocal();renderFixas();render(); // atualiza resumo também
   await togglePaidRemote(cid,isPaid);
 }
 
+// ── MODAL EDITAR FIXA ─────────────────────────────────────────
+function openModalEdit(id){
+  editingFixaId=id;
+  const f=fixas.find(x=>x.id===id);
+  if(!f)return;
+  document.getElementById('modal-title').textContent='Editar conta fixa';
+  document.getElementById('m-desc').value=f.desc;
+  document.getElementById('m-valor').value=f.valor;
+  document.getElementById('m-dia').value=f.dia;
+  document.getElementById('m-cat').value=f.cat;
+  document.getElementById('modal-del-btn').style.display='block';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function openModalNew(){
+  editingFixaId=null;
+  document.getElementById('modal-title').textContent='Nova conta fixa';
+  document.getElementById('m-desc').value='';
+  document.getElementById('m-valor').value='';
+  document.getElementById('m-dia').value='';
+  document.getElementById('m-cat').value='Contas fixas';
+  document.getElementById('modal-del-btn').style.display='none';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay'))return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+async function saveFixa(){
+  const desc=document.getElementById('m-desc').value.trim();
+  const valor=parseFloat(document.getElementById('m-valor').value);
+  const dia=parseInt(document.getElementById('m-dia').value)||1;
+  const cat=document.getElementById('m-cat').value;
+  if(!desc||isNaN(valor)||valor<=0){alert('Preencha descrição e valor.');return}
+
+  if(editingFixaId){
+    const f=fixas.find(x=>x.id===editingFixaId);
+    if(f){f.desc=desc;f.valor=valor;f.dia=dia;f.cat=cat;}
+    saveLocal();renderFixas();render();
+    document.getElementById('modal-overlay').classList.remove('open');
+    await saveFixaRemote({id:editingFixaId,desc,valor,dia,cat},false);
+  } else {
+    const f={id:uid(),desc,valor,dia,cat};
+    fixas.push(f);
+    saveLocal();renderFixas();render();
+    document.getElementById('modal-overlay').classList.remove('open');
+    await saveFixaRemote(f,true);
+  }
+}
+
+async function deleteFixa(){
+  if(!editingFixaId)return;
+  if(!confirm('Excluir esta conta fixa?'))return;
+  fixas=fixas.filter(f=>f.id!==editingFixaId);
+  // remove dos pagamentos locais
+  Object.keys(paid).forEach(k=>{delete paid[k][editingFixaId]});
+  saveLocal();renderFixas();render();
+  document.getElementById('modal-overlay').classList.remove('open');
+  await deleteFixaRemote(editingFixaId);
+}
+
+// ── LANÇAMENTOS MANUAIS ───────────────────────────────────────
 function rowHTML(i,withDel=false){
   const ic=i.tipo==='entrada'?'g':'r';
   const sign=i.tipo==='entrada'?'+':'-';
+  const tag=i._fixa?'<span style="font-size:10px;color:var(--muted);margin-left:4px">(fixa)</span>':'';
   const del=withDel?`<button class="del-btn" onclick="removeItem('${i.id}')">×</button>`:'';
-  return`<div class="item-row"><div><div class="iname">${i.desc}</div><div class="imeta">${i.cat} · dia ${i.dia}</div></div><div style="display:flex;align-items:center"><span class="ival ${ic}">${sign}${fmt(i.valor)}</span>${del}</div></div>`;
+  return`<div class="item-row"><div><div class="iname">${i.desc}${tag}</div><div class="imeta">${i.cat} · dia ${i.dia}</div></div><div style="display:flex;align-items:center"><span class="ival ${ic}">${sign}${fmt(i.valor)}</span>${del}</div></div>`;
 }
 
 async function addItem(){
@@ -466,7 +673,7 @@ async function addItem(){
   const btn=document.getElementById('add-btn');btn.disabled=true;btn.textContent='Salvando...';
   const tmpId='tmp_'+Date.now(),k=curKey();
   if(!data[k])data[k]={items:[]};
-  data[k].items.push({id:tmpId,desc,valor,cat,tipo,dia});
+  data[k].items.push({id:tmpId,desc,valor,cat,tipo,dia,_manual:true});
   data[k].items.sort((a,b)=>a.dia-b.dia);
   render();
   const realId=await saveToSupabase({desc,valor,cat,tipo,dia});
@@ -492,6 +699,7 @@ function changeMonth(d){
   if(ap==='fixas')renderFixas();
 }
 
+// ── COMPARATIVO ───────────────────────────────────────────────
 function fillCmpSelects(){
   const keys=Object.keys(data).sort();
   ['cmp-a','cmp-b'].forEach((sid,idx)=>{
@@ -499,7 +707,6 @@ function fillCmpSelects(){
     el.innerHTML=keys.map((k,i)=>{const[y,m]=k.split('-');return`<option value="${k}" ${i===keys.length-1-idx?'selected':''}>${MONTHS[+m]} ${y}</option>`}).join('');
   });
 }
-
 function renderCmp(){
   const ka=document.getElementById('cmp-a').value,kb=document.getElementById('cmp-b').value;
   if(!ka||!kb||ka===kb){document.getElementById('cmp-result').innerHTML='<div class="empty">Escolha meses diferentes.</div>';return}
@@ -519,6 +726,7 @@ function renderCmp(){
   `;
 }
 
+// ── INSIGHTS ──────────────────────────────────────────────────
 function renderInsights(){
   const keys=Object.keys(data).sort();
   const el=document.getElementById('insights-list');
@@ -552,6 +760,7 @@ function renderInsights(){
   el.innerHTML=ins.map(i=>`<div class="insight ${i.type}"><span class="insight-icon">${icons[i.type]}</span>${i.msg}</div>`).join('');
 }
 
+// ── NAV ───────────────────────────────────────────────────────
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
@@ -563,6 +772,7 @@ function showPage(name,btn){
   if(name==='resumo'||name==='lancamentos')render();
 }
 
+// ── INIT ──────────────────────────────────────────────────────
 const savedUser=localStorage.getItem('cf_user');
 if(savedUser&&USERS[savedUser]){
   currentUser=savedUser;loadLocal();openApp();

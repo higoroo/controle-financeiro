@@ -201,7 +201,6 @@ body{display:flex;flex-direction:column}
     <!-- RESUMO -->
     <div class="page active" id="p-resumo">
       <div class="metric-grid" id="metrics"><div class="loading" style="grid-column:1/-1">Carregando...</div></div>
-      <div class="card" id="saldo-inicial-info"></div>
       <div class="card">
         <div class="card-title">Gastos por categoria</div>
         <div id="cat-bars"><div class="loading">...</div></div>
@@ -310,8 +309,6 @@ const CAT_COLORS={'Moradia':'#60a5fa','Alimentação':'#4ade80','Transporte':'#f
 let data={};           // lançamentos manuais: { 'YYYY-MM': {items:[]} }
 let paid={};           // contas fixas pagas: { 'YYYY-MM': { cfId: true } }
 let fixas=[];          // contas fixas templates
-let saldoInicial={};   // saldo inicial por mês: { 'YYYY-MM': number }
-let mesInicio='2026-03'; // meses antes desse são ignorados no carry
 let curMonth=new Date().getMonth(), curYear=new Date().getFullYear();
 let currentUser=null, chartPizza=null, chartEvo=null;
 let editingFixaId=null;
@@ -384,11 +381,6 @@ async function loadFromSupabase(){
     await seedFixas();
   }
 
-  // saldo inicial por mês
-  const {data:siRows}=await sb.from('saldo_inicial').select('*');
-  saldoInicial={};
-  (siRows||[]).forEach(r=>{saldoInicial[r.mes_key]=r.valor;});
-
   saveLocal();setSyncStatus('ok');
   if(!lr.data||!lr.data.length)await seedLancamentos();
 }
@@ -413,18 +405,7 @@ async function seedFixas(){
 }
 
 async function seedLancamentos(){
-  const items=[
-    {ano:2026,mes:2,descricao:'IR - Higor',valor:500,cat:'Salário',tipo:'entrada',dia:1},
-    {ano:2026,mes:2,descricao:'Salário IW',valor:2000,cat:'Salário',tipo:'entrada',dia:15},
-    {ano:2026,mes:2,descricao:'Vale IW',valor:2000,cat:'Salário',tipo:'entrada',dia:30},
-    {ano:2026,mes:2,descricao:'IPVA HB20',valor:382.11,cat:'Transporte',tipo:'saida',dia:7},
-    {ano:2026,mes:2,descricao:'Fatura Nubank',valor:9480,cat:'Outros',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'Fatura Inter',valor:7121.48,cat:'Outros',tipo:'saida',dia:10},
-    {ano:2026,mes:2,descricao:'IPVA FZ25',valor:94.74,cat:'Transporte',tipo:'saida',dia:21},
-    {ano:2026,mes:2,descricao:'Licenciamento FZ25',valor:174.08,cat:'Transporte',tipo:'saida',dia:21},
-  ];
-  const {error}=await sb.from('lancamentos').insert(items);
-  if(!error)await loadFromSupabase();
+  // Sem dados de exemplo — usuário começa a partir de Abril/2026
 }
 
 async function saveToSupabase(item){
@@ -450,11 +431,11 @@ async function deleteFixaRemote(id){
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
-function saveLocal(){try{localStorage.setItem('cfin_v6',JSON.stringify({data,paid,fixas,saldoInicial,mesInicio}))}catch(e){}}
-function loadLocal(){try{const d=localStorage.getItem('cfin_v6');if(d){const p=JSON.parse(d);data=p.data||{};paid=p.paid||{};fixas=p.fixas||getDefaultFixas();saldoInicial=p.saldoInicial||{};mesInicio=p.mesInicio||'2026-03'}}catch(e){fixas=getDefaultFixas()}}
+function saveLocal(){try{localStorage.setItem('cfin_v7',JSON.stringify({data,paid,fixas}))}catch(e){}}
+function loadLocal(){try{const d=localStorage.getItem('cfin_v7');if(d){const p=JSON.parse(d);data=p.data||{};paid=p.paid||{};fixas=p.fixas||getDefaultFixas()}}catch(e){fixas=getDefaultFixas()}}
 
 // ── TOTALS ────────────────────────────────────────────────────
-// Saldo bruto de um mês (sem carry-over)
+// Saldo bruto de um mês: entradas - saídas (sem carry)
 function saldoBruto(k){
   const items=(data[k]||{items:[]}).items;
   const pm=paid[k]||{};
@@ -464,26 +445,15 @@ function saldoBruto(k){
   return entrada-saida;
 }
 
-// Saldo que chega ao início de k:
-//   = saldoInicial[k] (se definido) 
-//   + soma dos saldos brutos de todos os meses registrados ENTRE mesInicio e k (exclusive)
+// Soma encadeada de todos os meses anteriores a k (cronológica)
 function saldoAnterior(k){
-  // Se o próprio mês tem saldo inicial definido, usa ele e para
-  if(saldoInicial[k]!==undefined) return saldoInicial[k];
-  // Pega todos os meses >= mesInicio e < k
-  const allKeys=Object.keys(data).sort().filter(mk=>mk>=mesInicio && mk<k);
-  if(!allKeys.length) return 0;
-  // Verifica se algum mês anterior tem saldoInicial definido (ponto de partida manual)
-  let base=0, startIdx=0;
-  for(let i=allKeys.length-1;i>=0;i--){
-    if(saldoInicial[allKeys[i]]!==undefined){base=saldoInicial[allKeys[i]];startIdx=i+1;break;}
-  }
-  let acum=base;
-  for(let i=startIdx;i<allKeys.length;i++) acum+=saldoBruto(allKeys[i]);
+  const allKeys=Object.keys(data).sort().filter(mk=>mk<k);
+  let acum=0;
+  allKeys.forEach(mk=>acum+=saldoBruto(mk));
   return acum;
 }
 
-// Combina lançamentos manuais + contas fixas pagas do mês
+// Totais do mês: inclui carry-over do mês anterior
 function totals(k){
   const items=(data[k]||{items:[]}).items;
   const pm=paid[k]||{};
@@ -516,23 +486,8 @@ function render(){
     <div class="metric"><div class="lbl">Entradas</div><div class="val g">${fmt(t.entrada)}</div></div>
     <div class="metric"><div class="lbl">Saídas</div><div class="val r">${fmt(t.saida)}</div></div>
     <div class="metric"><div class="lbl">Saldo do mês</div><div class="val ${sc}">${fmt(t.saldo)}</div>${carryStr}</div>
-    <div class="metric"><div class="lbl">Saldo acumulado</div><div class="val ${sac}">${fmt(t.saldoAcum)}</div><div class="sub">${t.saldoAcum>=0?'positivo':'negativo'}</div></div>
-  `;
-
-  // Saldo inicial deste mês
-  const siVal=saldoInicial[curKey()];
-  const siHtml=siVal!==undefined
-    ?`<div style="font-size:11px;color:${siVal>=0?'var(--green)':'var(--red)'};margin-top:3px">Partindo de ${siVal>=0?'+':'−'}${fmt(Math.abs(siVal))}</div>`
-    :'';
-  document.getElementById('saldo-inicial-info').innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Saldo inicial do mês</div>
-        <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:${siVal!==undefined?(siVal>=0?'var(--green)':'var(--red)'):'var(--muted)'}">${siVal!==undefined?((siVal>=0?'+':'-')+fmt(Math.abs(siVal))):'Não definido'}</div>
-        ${siHtml}
-      </div>
-      <button onclick="promptSaldoInicial()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Sora',sans-serif;font-size:12px;cursor:pointer">✎ Definir</button>
-    </div>
+    <div class="metric"><div class="lbl">Saldo acumulado</div><div class="val ${sac}">${fmt(t.saldoAcum)}</div><div class="sub">${t.carryOver!==0?(t.carryOver>0?'▲ vem do anterior':'▼ vem do anterior'):'início'}</div></div>
+    <div class="metric" style="grid-column:1/-1"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
   `;
 
   const sorted=Object.entries(t.byCat).sort((a,b)=>b[1]-a[1]);
@@ -737,32 +692,6 @@ async function removeItem(id){
   const k=curKey();if(!data[k])return;
   data[k].items=data[k].items.filter(i=>i.id!==id);
   saveLocal();render();await deleteFromSupabase(id);
-}
-
-async function promptSaldoInicial(){
-  const atual=saldoInicial[curKey()];
-  const val=prompt(`Saldo inicial de ${MONTHS[curMonth]} ${curYear}:
-(valor que você tinha em caixa no início do mês)
-Deixe em branco para remover.`, atual!==undefined?atual:'');
-  if(val===null)return; // cancelou
-  if(val.trim()===''){
-    delete saldoInicial[curKey()];
-  } else {
-    const num=parseFloat(val.replace(',','.'));
-    if(isNaN(num)){alert('Valor inválido.');return;}
-    saldoInicial[curKey()]=num;
-  }
-  saveLocal();render();
-  // salva no supabase
-  setSyncStatus('syncing');
-  const k=curKey();
-  const v=saldoInicial[k];
-  if(v!==undefined){
-    await sb.from('saldo_inicial').upsert({mes_key:k,valor:v},{onConflict:'mes_key'});
-  } else {
-    await sb.from('saldo_inicial').delete().eq('mes_key',k);
-  }
-  setSyncStatus('ok');
 }
 
 function changeMonth(d){

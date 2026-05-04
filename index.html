@@ -362,10 +362,15 @@ async function loadFromSupabase(){
   // lançamentos
   data={};
   (lr.data||[]).forEach(r=>{
+    // Ignora registros de março 2026 (mes=2 em JS = março)
+    if(r.ano===2026 && r.mes===2) return;
     const k=key(r.ano,r.mes);
     if(!data[k])data[k]={items:[]};
     data[k].items.push({id:r.id,desc:r.descricao,valor:r.valor,cat:r.cat,tipo:r.tipo,dia:r.dia});
   });
+  // Deleta março do Supabase em background (silencioso)
+  sb.from('lancamentos').delete().eq('ano',2026).eq('mes',2).then(()=>{});
+  sb.from('contas_pagas').delete().eq('ano',2026).eq('mes',2).then(()=>{});
 
   // pagas
   paid={};
@@ -383,6 +388,9 @@ async function loadFromSupabase(){
 
   saveLocal();setSyncStatus('ok');
   if(!lr.data||!lr.data.length)await seedLancamentos();
+  // Remove março (2026-02) se ainda existir nos dados locais
+  delete data['2026-02'];
+  saveLocal();
 }
 
 function getDefaultFixas(){
@@ -445,9 +453,15 @@ function saldoBruto(k){
   return entrada-saida;
 }
 
-// Soma encadeada de todos os meses anteriores a k (cronológica)
+// Soma encadeada de todos os meses anteriores a k que têm dados reais
 function saldoAnterior(k){
-  const allKeys=Object.keys(data).sort().filter(mk=>mk<k);
+  // Só considera meses que têm lançamentos de verdade
+  const allKeys=Object.keys(data).sort().filter(mk=>{
+    if(mk>=k) return false;
+    const hasItems=(data[mk]||{items:[]}).items.length>0;
+    const hasPaid=Object.keys(paid[mk]||{}).length>0;
+    return hasItems||hasPaid;
+  });
   let acum=0;
   allKeys.forEach(mk=>acum+=saldoBruto(mk));
   return acum;
@@ -476,18 +490,20 @@ function totals(k){
 function render(){
   document.getElementById('month-label').textContent=MONTHS[curMonth]+' '+curYear;
   const t=totals(curKey());
-  const sc=t.saldo>=0?'g':'r';
-  const sac=t.saldoAcum>=0?'g':'r';
-  const carryStr=t.carryOver!==0
-    ?`<div class="sub" style="color:${t.carryOver>=0?'var(--green)':'var(--red)'}">${t.carryOver>=0?'+':'−'}${fmt(Math.abs(t.carryOver))} anterior</div>`
-    :'';
+
+
+  // Saldo = saldo do mês + carry do anterior
+  const saldoFinal = t.saldo + t.carryOver;
+  const sfClass = saldoFinal >= 0 ? 'g' : 'r';
+  const carryInfo = t.carryOver !== 0
+    ? `<div class="sub" style="color:${t.carryOver>=0?'var(--green)':'var(--red)'}">${t.carryOver>=0?'+':''}${fmt(t.carryOver)} do mês anterior</div>`
+    : '<div class="sub">primeiro mês</div>';
 
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="lbl">Entradas</div><div class="val g">${fmt(t.entrada)}</div></div>
     <div class="metric"><div class="lbl">Saídas</div><div class="val r">${fmt(t.saida)}</div></div>
-    <div class="metric"><div class="lbl">Saldo do mês</div><div class="val ${sc}">${fmt(t.saldo)}</div>${carryStr}</div>
-    <div class="metric"><div class="lbl">Saldo acumulado</div><div class="val ${sac}">${fmt(t.saldoAcum)}</div><div class="sub">${t.carryOver!==0?(t.carryOver>0?'▲ vem do anterior':'▼ vem do anterior'):'início'}</div></div>
-    <div class="metric" style="grid-column:1/-1"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
+    <div class="metric"><div class="lbl">Saldo</div><div class="val ${sfClass}">${fmt(saldoFinal)}</div>${carryInfo}</div>
+    <div class="metric"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
   `;
 
   const sorted=Object.entries(t.byCat).sort((a,b)=>b[1]-a[1]);
@@ -541,7 +557,7 @@ function renderChartEvo(){
     data:{labels,datasets:[
       {label:'Entradas',data:keys.map(k=>totals(k).entrada),backgroundColor:'#4ade8044',borderColor:'#4ade80',borderWidth:1,borderRadius:4},
       {label:'Saídas',data:keys.map(k=>totals(k).saida),backgroundColor:'#f8717144',borderColor:'#f87171',borderWidth:1,borderRadius:4},
-      {label:'Saldo acum.',data:keys.map(k=>totals(k).saldoAcum),type:'line',borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,pointBackgroundColor:'#fbbf24',tension:.3}
+      {label:'Saldo',data:keys.map(k=>{const t=totals(k);return t.saldo+t.carryOver;}),type:'line',borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,pointBackgroundColor:'#fbbf24',tension:.3}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#888',font:{size:10,family:'Sora'},boxWidth:10,padding:8}}},
@@ -583,7 +599,7 @@ function renderFixas(){
     <div class="item-row"><span class="imeta">Total fixos/mês</span><span class="ival r">${fmt(total)}</span></div>
     <div class="item-row"><span class="imeta">Já pago (somado ao mês)</span><span class="ival g">${fmt(paidTotal)}</span></div>
     <div class="item-row"><span class="imeta">Ainda a pagar</span><span class="ival a">${fmt(total-paidTotal)}</span></div>
-    <div class="item-row" style="margin-top:4px;border-top:1px solid var(--border2);padding-top:10px"><span class="imeta">Saldo acumulado (c/ meses ant.)</span><span class="ival ${totals(curKey()).saldoAcum>=0?'g':'r'}">${fmt(totals(curKey()).saldoAcum)}</span></div>
+
   `;
 }
 

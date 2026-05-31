@@ -371,8 +371,7 @@ async function loadFromSupabase(){
   // lançamentos
   data={};
   (lr.data||[]).forEach(r=>{
-
-    const k=key(r.ano,r.mes);
+    const k=key(r.ano,r.mes+1);
     if(!data[k])data[k]={items:[]};
     data[k].items.push({id:r.id,desc:r.descricao,valor:r.valor,cat:r.cat,tipo:r.tipo,dia:r.dia});
   });
@@ -381,7 +380,7 @@ async function loadFromSupabase(){
   // pagas
   paid={};
   (pr.data||[]).forEach(r=>{
-    const k=key(r.ano,r.mes);if(!paid[k])paid[k]={};paid[k][r.conta_id]=true;
+    const k=key(r.ano,r.mes+1);if(!paid[k])paid[k]={};paid[k][r.conta_id]=true;
   });
 
   // fixas templates
@@ -422,14 +421,14 @@ async function seedLancamentos(){
 
 async function saveToSupabase(item){
   setSyncStatus('syncing');
-  const {data:row,error}=await sb.from('lancamentos').insert({ano:curYear,mes:curMonth,descricao:item.desc,valor:item.valor,cat:item.cat,tipo:item.tipo,dia:item.dia}).select().single();
+  const {data:row,error}=await sb.from('lancamentos').insert({ano:curYear,mes:curMonth-1,descricao:item.desc,valor:item.valor,cat:item.cat,tipo:item.tipo,dia:item.dia}).select().single();
   setSyncStatus(error?'error':'ok');return error?null:row.id;
 }
 async function deleteFromSupabase(id){setSyncStatus('syncing');const{error}=await sb.from('lancamentos').delete().eq('id',id);setSyncStatus(error?'error':'ok')}
 
 async function togglePaidRemote(cid,isPaid){
-  if(isPaid) await sb.from('contas_pagas').insert({ano:curYear,mes:curMonth,conta_id:cid});
-  else await sb.from('contas_pagas').delete().eq('ano',curYear).eq('mes',curMonth).eq('conta_id',cid);
+  if(isPaid) await sb.from('contas_pagas').insert({ano:curYear,mes:curMonth-1,conta_id:cid});
+  else await sb.from('contas_pagas').delete().eq('ano',curYear).eq('mes',curMonth-1).eq('conta_id',cid);
 }
 
 async function saveFixaRemote(f,isNew){

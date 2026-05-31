@@ -309,7 +309,7 @@ const CAT_COLORS={'Moradia':'#60a5fa','Alimentação':'#4ade80','Transporte':'#f
 let data={};           // lançamentos manuais: { 'YYYY-MM': {items:[]} }
 let paid={};           // contas fixas pagas: { 'YYYY-MM': { cfId: true } }
 let fixas=[];          // contas fixas templates
-let curMonth=new Date().getMonth(), curYear=new Date().getFullYear();
+let curMonth=new Date().getMonth()+1, curYear=new Date().getFullYear(); // 1-based: 1=Jan, 12=Dec
 let currentUser=null, chartPizza=null, chartEvo=null;
 let editingFixaId=null;
 
@@ -331,7 +331,13 @@ async function doLogin(){
   if(!USERS[u]||USERS[u]!==p){errEl.style.display='block';return}
   btn.disabled=true;stEl.style.display='block';stEl.textContent='Conectando...';
   currentUser=u;
-  try{await loadFromSupabase();}catch(e){loadLocal();}
+  try{
+    await loadFromSupabase();
+  }catch(e){
+    console.log('Supabase offline, usando cache local:', e.message);
+    loadLocal();
+    setSyncStatus('error');
+  }
   openApp();btn.disabled=false;
 }
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
@@ -352,25 +358,25 @@ function doLogout(){
 // ── SUPABASE ──────────────────────────────────────────────────
 async function loadFromSupabase(){
   setSyncStatus('syncing');
-  const [lr,pr,fr]=await Promise.all([
+  // Timeout de 8 segundos para não travar
+  const timeout = new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),8000));
+  const fetchAll = Promise.all([
     sb.from('lancamentos').select('*').order('dia',{ascending:true}),
     sb.from('contas_pagas').select('*'),
     sb.from('contas_fixas_templates').select('*').order('dia',{ascending:true})
   ]);
+  const [lr,pr,fr] = await Promise.race([fetchAll, timeout.then(()=>{throw new Error('timeout')})]);
   if(lr.error)throw lr.error;
 
   // lançamentos
   data={};
   (lr.data||[]).forEach(r=>{
-    // Ignora registros de março 2026 (mes=2 em JS = março)
-    if(r.ano===2026 && r.mes===2) return;
+
     const k=key(r.ano,r.mes);
     if(!data[k])data[k]={items:[]};
     data[k].items.push({id:r.id,desc:r.descricao,valor:r.valor,cat:r.cat,tipo:r.tipo,dia:r.dia});
   });
-  // Deleta março do Supabase em background (silencioso)
-  sb.from('lancamentos').delete().eq('ano',2026).eq('mes',2).then(()=>{});
-  sb.from('contas_pagas').delete().eq('ano',2026).eq('mes',2).then(()=>{});
+
 
   // pagas
   paid={};
@@ -388,9 +394,7 @@ async function loadFromSupabase(){
 
   saveLocal();setSyncStatus('ok');
   if(!lr.data||!lr.data.length)await seedLancamentos();
-  // Remove março (2026-02) se ainda existir nos dados locais
-  delete data['2026-02'];
-  saveLocal();
+
 }
 
 function getDefaultFixas(){
@@ -488,7 +492,7 @@ function totals(k){
 
 // ── RENDER RESUMO ─────────────────────────────────────────────
 function render(){
-  document.getElementById('month-label').textContent=MONTHS[curMonth]+' '+curYear;
+  document.getElementById('month-label').textContent=MONTHS[curMonth-1]+' '+curYear;
   const t=totals(curKey());
 
 
@@ -550,7 +554,7 @@ function renderChartPizza(byCat){
 function renderChartEvo(){
   const keys=Object.keys(data).sort().slice(-6);
   if(keys.length<2)return;
-  const labels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS[+m].slice(0,3)});
+  const labels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS[+m-1].slice(0,3)});
   if(chartEvo)chartEvo.destroy();
   chartEvo=new Chart(document.getElementById('chart-evolucao'),{
     type:'bar',
@@ -568,7 +572,7 @@ function renderChartEvo(){
 // ── CONTAS FIXAS ──────────────────────────────────────────────
 function renderFixas(){
   const k=curKey();
-  document.getElementById('fixas-month-label').textContent=MONTHS[curMonth]+' '+curYear;
+  document.getElementById('fixas-month-label').textContent=MONTHS[curMonth-1]+' '+curYear;
   const pm=paid[k]||{};
   const paidCount=fixas.filter(f=>pm[f.id]).length;
   const total=fixas.reduce((s,f)=>s+f.valor,0);
@@ -712,8 +716,8 @@ async function removeItem(id){
 
 function changeMonth(d){
   curMonth+=d;
-  if(curMonth<0){curMonth=11;curYear--}
-  if(curMonth>11){curMonth=0;curYear++}
+  if(curMonth<1){curMonth=12;curYear--}
+  if(curMonth>12){curMonth=1;curYear++}
   render();
   const ap=document.querySelector('.page.active').id.replace('p-','');
   if(ap==='fixas')renderFixas();
@@ -724,7 +728,7 @@ function fillCmpSelects(){
   const keys=Object.keys(data).sort();
   ['cmp-a','cmp-b'].forEach((sid,idx)=>{
     const el=document.getElementById(sid);
-    el.innerHTML=keys.map((k,i)=>{const[y,m]=k.split('-');return`<option value="${k}" ${i===keys.length-1-idx?'selected':''}>${MONTHS[+m]} ${y}</option>`}).join('');
+    el.innerHTML=keys.map((k,i)=>{const[y,m]=k.split('-');return`<option value="${k}" ${i===keys.length-1-idx?'selected':''}>${MONTHS[+m-1]} ${y}</option>`}).join('');
   });
 }
 function renderCmp(){
@@ -732,7 +736,7 @@ function renderCmp(){
   if(!ka||!kb||ka===kb){document.getElementById('cmp-result').innerHTML='<div class="empty">Escolha meses diferentes.</div>';return}
   const ta=totals(ka),tb=totals(kb);
   const[ya,ma]=ka.split('-'),[yb,mb]=kb.split('-');
-  const la=MONTHS[+ma],lb=MONTHS[+mb];
+  const la=MONTHS[+ma-1],lb=MONTHS[+mb-1];
   const dStr=(a,b,inv=false)=>{
     const d=b-a;if(Math.abs(d)<.01||!a)return '—';
     const pct=Math.round(Math.abs(d)/Math.abs(a)*100),up=d>0;
@@ -753,7 +757,7 @@ function renderInsights(){
   const ins=[],icons={bad:'⚠',warn:'◉',good:'✓',info:'◎'};
   if(!keys.length){el.innerHTML='<div class="empty">Adicione lançamentos para ver análises.</div>';return}
   keys.forEach(k=>{
-    const t=totals(k);const[y,m]=k.split('-');const label=MONTHS[+m]+' '+y;
+    const t=totals(k);const[y,m]=k.split('-');const label=MONTHS[+m-1]+' '+y;
     if(!(data[k]||{items:[]}).items.length)return;
     if(t.saldo<0)ins.push({type:'bad',msg:`<b>Saldo negativo em ${label}:</b> saídas (${fmt(t.saida)}) superaram entradas (${fmt(t.entrada)}) em ${fmt(Math.abs(t.saldo))}.`});
     if(t.invest===0)ins.push({type:'warn',msg:`<b>Sem investimentos em ${label}.</b> Tente reservar pelo menos 10% da renda.`});
@@ -765,7 +769,7 @@ function renderInsights(){
   });
   if(keys.length>=2){
     const[k0,k1]=keys.slice(-2);const t0=totals(k0),t1=totals(k1);
-    const l0=MONTHS[+k0.split('-')[1]],l1=MONTHS[+k1.split('-')[1]];
+    const l0=MONTHS[+k0.split('-')[1]-1],l1=MONTHS[+k1.split('-')[1]-1];
     if(t1.saida>t0.saida*1.2)ins.push({type:'warn',msg:`Gastos em ${l1} foram <b>${Math.round((t1.saida/t0.saida-1)*100)}% maiores</b> que ${l0}.`});
     if(t1.saida<t0.saida*.85)ins.push({type:'good',msg:`Parabéns! Gastos em ${l1} caíram ${Math.round((1-t1.saida/t0.saida)*100)}% em relação a ${l0}.`});
     [...new Set([...Object.keys(t0.byCat),...Object.keys(t1.byCat)])].forEach(c=>{
@@ -796,7 +800,7 @@ function showPage(name,btn){
 const savedUser=localStorage.getItem('cf_user');
 if(savedUser&&USERS[savedUser]){
   currentUser=savedUser;loadLocal();openApp();
-  loadFromSupabase().then(()=>render()).catch(()=>{});
+  loadFromSupabase().then(()=>render()).catch(e=>{console.log('Sync failed:',e.message);setSyncStatus('error');});
 }
 </script>
 </body>

@@ -446,31 +446,7 @@ function saveLocal(){try{localStorage.setItem('cfin_v7',JSON.stringify({data,pai
 function loadLocal(){try{const d=localStorage.getItem('cfin_v7');if(d){const p=JSON.parse(d);data=p.data||{};paid=p.paid||{};fixas=p.fixas||getDefaultFixas()}}catch(e){fixas=getDefaultFixas()}}
 
 // ── TOTALS ────────────────────────────────────────────────────
-// Saldo bruto de um mês: entradas - saídas (sem carry)
-function saldoBruto(k){
-  const items=(data[k]||{items:[]}).items;
-  const pm=paid[k]||{};
-  let entrada=0,saida=0;
-  items.forEach(i=>{if(i.tipo==='entrada')entrada+=i.valor;else saida+=i.valor;});
-  fixas.forEach(f=>{if(pm[f.id])saida+=f.valor;});
-  return entrada-saida;
-}
-
-// Soma encadeada de todos os meses anteriores a k que têm dados reais
-function saldoAnterior(k){
-  // Só considera meses que têm lançamentos de verdade
-  const allKeys=Object.keys(data).sort().filter(mk=>{
-    if(mk>=k) return false;
-    const hasItems=(data[mk]||{items:[]}).items.length>0;
-    const hasPaid=Object.keys(paid[mk]||{}).length>0;
-    return hasItems||hasPaid;
-  });
-  let acum=0;
-  allKeys.forEach(mk=>acum+=saldoBruto(mk));
-  return acum;
-}
-
-// Totais do mês: inclui carry-over do mês anterior
+// Totais do mês: apenas lançamentos manuais + contas fixas pagas
 function totals(k){
   const items=(data[k]||{items:[]}).items;
   const pm=paid[k]||{};
@@ -484,9 +460,7 @@ function totals(k){
   fixas.forEach(f=>{
     if(pm[f.id]){saida+=f.valor;byCat[f.cat]=(byCat[f.cat]||0)+f.valor;}
   });
-  const saldoMes=entrada-saida;
-  const carryOver=saldoAnterior(k);
-  return{entrada,saida,saldo:saldoMes,saldoAcum:saldoMes+carryOver,carryOver,invest,byCat};
+  return{entrada,saida,saldo:entrada-saida,invest,byCat};
 }
 
 // ── RENDER RESUMO ─────────────────────────────────────────────
@@ -495,17 +469,11 @@ function render(){
   const t=totals(curKey());
 
 
-  // Saldo = saldo do mês + carry do anterior
-  const saldoFinal = t.saldo + t.carryOver;
-  const sfClass = saldoFinal >= 0 ? 'g' : 'r';
-  const carryInfo = t.carryOver !== 0
-    ? `<div class="sub" style="color:${t.carryOver>=0?'var(--green)':'var(--red)'}">${t.carryOver>=0?'+':''}${fmt(t.carryOver)} do mês anterior</div>`
-    : '<div class="sub">primeiro mês</div>';
-
+  const sc = t.saldo >= 0 ? 'g' : 'r';
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="lbl">Entradas</div><div class="val g">${fmt(t.entrada)}</div></div>
     <div class="metric"><div class="lbl">Saídas</div><div class="val r">${fmt(t.saida)}</div></div>
-    <div class="metric"><div class="lbl">Saldo</div><div class="val ${sfClass}">${fmt(saldoFinal)}</div>${carryInfo}</div>
+    <div class="metric"><div class="lbl">Saldo</div><div class="val ${sc}">${fmt(t.saldo)}</div></div>
     <div class="metric"><div class="lbl">Investido</div><div class="val a">${fmt(t.invest)}</div><div class="sub">${t.entrada>0?Math.round(t.invest/t.entrada*100):0}% da renda</div></div>
   `;
 
@@ -560,7 +528,7 @@ function renderChartEvo(){
     data:{labels,datasets:[
       {label:'Entradas',data:keys.map(k=>totals(k).entrada),backgroundColor:'#4ade8044',borderColor:'#4ade80',borderWidth:1,borderRadius:4},
       {label:'Saídas',data:keys.map(k=>totals(k).saida),backgroundColor:'#f8717144',borderColor:'#f87171',borderWidth:1,borderRadius:4},
-      {label:'Saldo',data:keys.map(k=>{const t=totals(k);return t.saldo+t.carryOver;}),type:'line',borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,pointBackgroundColor:'#fbbf24',tension:.3}
+      {label:'Saldo',data:keys.map(k=>totals(k).saldo),type:'line',borderColor:'#fbbf24',backgroundColor:'transparent',borderWidth:2,pointBackgroundColor:'#fbbf24',tension:.3}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#888',font:{size:10,family:'Sora'},boxWidth:10,padding:8}}},
